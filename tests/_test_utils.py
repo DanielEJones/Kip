@@ -1,12 +1,14 @@
 from os import path, listdir
 from subprocess import run
 
+from Tamarin import run_tests
+
 
 class CompileError(Exception):
     ...
 
 
-def find_files(dir: str) -> list[str]:
+def find_files_in(dir: str) -> list[str]:
     return [
         path.join(file)
         for file in listdir(dir)
@@ -20,7 +22,7 @@ def compile() -> None:
     res = run([
         "cc", "-Wall", "-Werror",
         "-o", "main",
-        "main.c", *find_files("src")
+        "main.c", *find_files_in("src/")
     ], capture_output = True)
 
     if res.returncode:
@@ -30,4 +32,15 @@ def compile() -> None:
                 *map(prefix("  | "), res.stderr.decode().splitlines())
             ])
         )
+
+def kip_exec(command: list[str] | str) -> bytes:
+    command = [command] if not isinstance(command, list) else command
+    return run(["./main", *command], capture_output=True).stdout
+
+def main():
+    try:
+        compile()
+        run_tests()
+    except CompileError as e:
+        print(e)
 

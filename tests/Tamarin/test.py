@@ -35,16 +35,27 @@ def chain_wrapper(method: Callable[..., None]) -> Callable[..., _Test]:
 def test_wrapper(self: _Test, function: Callable[..., None]) -> Callable[[], None]:
     @wraps(function)
     def inner() -> None:
-        try:
-            function(**{
+
+        errors: list[str] = []
+
+        for _ in range(self._times):
+            inputs = {
                 k: v() if callable(v) else v
                 for k, v
                 in self._params.items()
-            })
-        except Exception as e:
-            raise TestFailed(
-                f"TEST FAILED\n  | {function.__name__}({self._params}) should {self._desc or ''}:\n  | {e}"
-            )
+            }
+
+            try:
+                function(**inputs)
+            except TestFailed as e:
+                header = "TEST FAILED\n" if not errors else "  +\n"
+                errors.append(
+                    f"{header}  | {function.__name__}({inputs if inputs else ''}) should {self._desc or ''}:\n  | {e}"
+                )
+
+        if errors:
+            raise TestFailed('\n'.join(errors))
+
 
     return inner
 
@@ -59,17 +70,24 @@ class Test:
     def should(description: str) -> _Test:
         return _Test().should(description)
 
+    @staticmethod
+    def repeat(times: int) -> _Test:
+        return _Test().repeat(times)
+
+
 
 class _Test:
 
     _desc: str | None
     _params: dict[str, Any]
     _called: set[Callable]
+    _times: int
 
     def __init__(self) -> None:
         self._desc = None
         self._params = dict()
         self._called = set()
+        self._times = 1
 
     @chain_wrapper
     def should(self, description: str) -> None:
@@ -78,6 +96,10 @@ class _Test:
     @chain_wrapper
     def given(self, **params: dict[str, Any]) -> None:
         self._params.update(params)
+
+    @chain_wrapper
+    def repeat(self, times: int) -> None:
+        self._times = times
 
     def __call__(self, function: Callable[..., None]) -> Callable[[], None]:
         wrapped = test_wrapper(self, function)
