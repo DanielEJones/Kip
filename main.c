@@ -7,13 +7,22 @@ typedef enum {
 	ParseErr,
 } ParseResult;
 
+typedef enum {
+	OpAdd, OpSub, OpMul,
+} OpType;
+
 typedef struct {
 	int left, right;
+	OpType op;
 } AST;
+
+#define require(PARSE) if (PARSE == ParseErr) return ParseErr;
 
 ParseResult parseNumber(const char **statement, int *dest) {
 	const char *start = *statement;
 	const char *end = *statement;
+
+	if ('0' > *end || *end > '9') return ParseErr;
 
 	while ('0' <= *end && *end <= '9') end++;
 
@@ -31,10 +40,21 @@ ParseResult parseNumber(const char **statement, int *dest) {
 	return ParseOK;
 }
 
+ParseResult parseOperator(const char **statement, OpType *op) {
+	switch (**statement) {
+		case '+': *op = OpAdd; *statement += 1; return ParseOK;
+		case '-': *op = OpSub; *statement += 1; return ParseOK;
+		case '*': *op = OpMul; *statement += 1; return ParseOK;
+		default: return ParseErr;
+	}
+}
+
 ParseResult parse(const char **statement, AST *ast) {
-	parseNumber(statement, &ast->left);
-	*statement += 3;
-	parseNumber(statement, &ast->right);
+	require(parseNumber(statement, &ast->left));
+	(*statement)++;
+	require(parseOperator(statement, &ast->op));
+	(*statement)++;
+	require(parseNumber(statement, &ast->right));
 	return ParseOK;
 }
 
@@ -42,8 +62,19 @@ int main(int argc, char *argv[]) {
 	const char *program = argv[1];
 
 	AST ast;
-	parse(&program, &ast);
+	ParseResult pres = parse(&program, &ast);
+	if (pres != ParseOK) {
+		fprintf(stderr, "Parsing Failed.\n");
+		exit(EXIT_FAILURE);
+	}
 
-	printf("%d\n", ast.left + ast.right);
+	int ores;
+	switch (ast.op) {
+		case OpAdd: {ores = ast.left + ast.right; break;}
+		case OpSub: {ores = ast.left - ast.right; break;}
+		case OpMul: {ores = ast.left * ast.right; break;}
+	}
+
+	printf("%d\n", ores);
 	exit(EXIT_SUCCESS);
 }
