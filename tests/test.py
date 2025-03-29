@@ -28,6 +28,22 @@ def test_integer_subtraction(a, b):
 def test_integer_multiplicaiton(a, b):
     Assert(kip_exec(f"{a} * {b}")).equals(f"{a * b}\n".encode())
 
+@Test.should("fail on ill formed binary expressions")
+def test_bad_expr():
+    Assert(
+        kip_exec(f"1 + nope", stderr=True)
+    ).equals(b'Parsing Failed:\n  | 1 + nope\n  | ~~~~^ Expected one or more digits.\n')
+
+@Test.should("correctly compute simple compound expressions").given(a = small_int, b = small_int, c = small_int)
+def test_simple_compound_expressions(a, b, c):
+    Assert(kip_exec(f"{a} * {b} - {c}")).equals(f"{a * b - c}\n".encode())
+
+@Test.should("correctly compute non-trivial compound expressions").given(a = small_int, b = small_int, c = small_int)
+def test_harder_compound_expressions(a, b, c):
+    Assert(kip_exec(f"{a} - {b} * {c}")).equals(f"{a - b * c}\n".encode())
+
+
+
 if __name__ == "__main__":
     main()
 

@@ -48,7 +48,7 @@ def test_wrapper(self: _Test, function: Callable[..., None]) -> Callable[[], Non
             try:
                 function(**inputs)
             except TestFailed as e:
-                header = "TEST FAILED\n" if not errors else "  +\n"
+                header = "TEST FAILED:\n" if not errors else "  +\n"
                 errors.append(
                     f"{header}  | {function.__name__}({inputs if inputs else ''}) should {self._desc or ''}:\n  | {e}"
                 )

@@ -10,7 +10,7 @@ class CompileError(Exception):
 
 def find_files_in(dir: str) -> list[str]:
     return [
-        path.join(file)
+        path.join(dir, file)
         for file in listdir(dir)
         if file.endswith(".c")
     ]
@@ -33,9 +33,10 @@ def compile() -> None:
             ])
         )
 
-def kip_exec(command: list[str] | str) -> bytes:
+def kip_exec(command: list[str] | str, stderr: bool = False) -> bytes:
     command = [command] if not isinstance(command, list) else command
-    return run(["./main", *command], capture_output=True).stdout
+    res = run(["./main", *command], capture_output=True)
+    return res.stdout if not stderr else res.stderr
 
 def main():
     try:
