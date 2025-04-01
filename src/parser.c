@@ -32,6 +32,13 @@ int expect(Parser *parser, TokenType type) {
 // Parse Functions
 //
 
+/*
+ * program = expr
+ * expr = term [(+ | -) expr]
+ * term = factor [(* | /) term]
+ * factor = (expr) | num
+ */
+
 ParseResult parseExpression(Parser *parser) {
 	if (!expect(parser, TokenInt)) {
 		return (ParseResult) { .status = ParseErr, .message = "Expected an Integer." };
@@ -39,8 +46,9 @@ ParseResult parseExpression(Parser *parser) {
 
 	parser->ast->left = advance(parser);
 
-
-	if (!(expect(parser, TokenPlus) || expect(parser, TokenDash) || expect(parser, TokenStar) || expect(parser, TokenSlash))) {
+	if (!(expect(parser, TokenPlus) || expect(parser, TokenDash)
+		|| expect(parser, TokenStar) || expect(parser, TokenSlash)
+	)) {
 		return (ParseResult) { .status = ParseErr, .message = "Expected an Operator." };
 	}
 
@@ -61,6 +69,6 @@ ParseResult parse(Parser *parser) {
 
 void initParser(Parser *parser, TokenList *tokens) {
 	parser->tokens = tokens;
-	parser->ast = malloc(sizeof(AST));
+	parser->ast = (AST *) malloc(sizeof(AST));
 }
 

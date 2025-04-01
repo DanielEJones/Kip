@@ -36,14 +36,13 @@ def test_bad_expr():
         b'Parsing Failed:\n  | 1 + nope\n  | ~~~~^ Expected an Integer.\n'
     )
 
-@Test.should("correctly compute simple compound expressions").given(a = small_int, b = small_int, c = small_int)
+@Test.should("correctly compute simple compound expressions").given(a = small_int, b = small_int, c = small_int).repeat(10)
 def test_simple_compound_expressions(a, b, c):
     Assert(kip_exec(f"{a} * {b} - {c}")).equals(f"{a * b - c}\n".encode())
 
-@Test.should("correctly compute non-trivial compound expressions").given(a = small_int, b = small_int, c = small_int)
+@Test.should("correctly compute non-trivial compound expressions").given(a = small_int, b = small_int, c = small_int).repeat(10)
 def test_harder_compound_expressions(a, b, c):
     Assert(kip_exec(f"{a} - {b} * {c}")).equals(f"{a - b * c}\n".encode())
-
 
 
 if __name__ == "__main__":
