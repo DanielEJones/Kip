@@ -1,63 +1,66 @@
-#include <stdlib.h>
-
 #include "../defs/parser.h"
 
+#include <stdlib.h>
 
-#define expect(PARSE) \
-do { \
-	ParseResult res = PARSE;\
-	if (res.status != ParseOK) return res; \
-} while(0);\
 
-#define PARSE_ERR(MSG) (ParseResult) { .status = ParseErr, .message = MSG }
-#define PARSE_OK() (ParseResult) { .status = ParseOK, .message = NULL }
+// -------------------------------------------------------------------------
+// Parsing Utilities
+//
 
-void skipWhitespace(const char **stream) {
-	while (**stream == ' ') (*stream)++;
+Token *current(Parser *parser) {
+	if (parser->current < parser->tokens->count) {
+		return &parser->tokens->tokens[parser->current];
+	}
+	return &parser->tokens->tokens[parser->tokens->count];
 }
 
-ParseResult parseNumber(const char **stream, int *dest) {
-	const char *start = *stream;
-	const char *end = *stream;
+Token *advance(Parser *parser) {
+	if (current(parser)->type == TokenEOF) {
+		return current(parser);
+	}
+	return &parser->tokens->tokens[parser->current++];
+}
 
-	if ('0' > *end || *end > '9') return PARSE_ERR("Expected one or more digits.");
+int expect(Parser *parser, TokenType type) {
+	if (current(parser)->type == TokenSpace) {
+		advance(parser);
+	}
+	return current(parser)->type == type;
+}
 
-	while ('0' <= *end && *end <= '9') end++;
+// -------------------------------------------------------------------------
+// Parse Functions
+//
 
-	int len = end - start;
-
-	int n = 0, p = 1;
-	for (int i = 1; i <= len; ++i) {
-		n += (int)(*(end - i) - '0') * p;
-		p *= 10;
+ParseResult parseExpression(Parser *parser) {
+	if (!expect(parser, TokenInt)) {
+		return (ParseResult) { .status = ParseErr, .message = "Expected an Integer." };
 	}
 
-	*dest = n;
-	*stream += len;
+	parser->ast->left = advance(parser);
 
-	return PARSE_OK();
-}
 
-ParseResult parseOperator(const char **stream, OpType *op) {
-	switch (**stream) {
-		case '+': *op = OpAdd; (*stream)++; return PARSE_OK();
-		case '-': *op = OpSub; (*stream)++; return PARSE_OK();
-		case '*': *op = OpMul; (*stream)++; return PARSE_OK();
-		default: return PARSE_ERR("Unrecognised Operator.");
+	if (!(expect(parser, TokenPlus) || expect(parser, TokenDash) || expect(parser, TokenStar) || expect(parser, TokenSlash))) {
+		return (ParseResult) { .status = ParseErr, .message = "Expected an Operator." };
 	}
+
+	parser->ast->op = advance(parser);
+
+	if (!expect(parser, TokenInt)) {
+		return (ParseResult) { .status = ParseErr, .message = "Expected an Integer." };
+	}
+
+	parser->ast->right = advance(parser);
+
+	return (ParseResult) { .status = ParseOK };
 }
 
-ParseResult parseExpression(const char **stream, AST *ast) {
-	// expr = num op num
-	expect(parseNumber(stream, &ast->left));
-	skipWhitespace(stream);
-	expect(parseOperator(stream, &ast->op));
-	skipWhitespace(stream);
-	expect(parseNumber(stream, &ast->right));
-	return PARSE_OK();
+ParseResult parse(Parser *parser) {
+	return parseExpression(parser);
 }
 
-ParseResult parse(const char **program, AST *ast) {
-	return parseExpression(program, ast);
+void initParser(Parser *parser, TokenList *tokens) {
+	parser->tokens = tokens;
+	parser->ast = malloc(sizeof(AST));
 }
 

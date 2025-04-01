@@ -32,7 +32,9 @@ def test_integer_multiplicaiton(a, b):
 def test_bad_expr():
     Assert(
         kip_exec(f"1 + nope", stderr=True)
-    ).equals(b'Parsing Failed:\n  | 1 + nope\n  | ~~~~^ Expected one or more digits.\n')
+    ).equals(
+        b'Parsing Failed:\n  | 1 + nope\n  | ~~~~^ Expected an Integer.\n'
+    )
 
 @Test.should("correctly compute simple compound expressions").given(a = small_int, b = small_int, c = small_int)
 def test_simple_compound_expressions(a, b, c):
