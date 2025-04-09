@@ -33,25 +33,6 @@ void printToken(Token *token) {
 	}
 }
 
-int walkAST(AST *ast) {
-	switch (ast->type) {
-		case NodeConstant: {
-			return ast->is.constant.value;
-		}
-
-		case NodeBinary: {
-			switch (ast->is.binary.op) {
-				case OpAdd: return walkAST(ast->is.binary.left) + walkAST(ast->is.binary.right);
-				case OpSub: return walkAST(ast->is.binary.left) - walkAST(ast->is.binary.right);
-				case OpMul: return walkAST(ast->is.binary.left) * walkAST(ast->is.binary.right);
-				case OpDiv: return walkAST(ast->is.binary.left) / walkAST(ast->is.binary.right);
-			}
-		}
-
-		default: return 0;
-	}
-}
-
 int main(int argc, char *argv[]) {
 	const char *program = argv[1];
 
@@ -78,6 +59,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	printAST(ast);
 	printf("%d\n", walkAST(ast));
 
 	exit(EXIT_SUCCESS);
