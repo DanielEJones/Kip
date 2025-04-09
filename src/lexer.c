@@ -85,9 +85,9 @@ void lex(Lexer *lexer) {
 			case ')': t.type = TokenRParen; break;
 			case '\n': t.type = TokenNewline; break;
 
-			case '\0': { 
-				appendToken(&lexer->tokens, (Token) { .type = TokenEOF, .start = "EOF", .len = 3 }); 
-				return; 
+			case '\0': {
+				appendToken(&lexer->tokens, (Token) { .type = TokenEOF, .start = "EOF", .len = 3 });
+				return;
 			}
 
 			default: {

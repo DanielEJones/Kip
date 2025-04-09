@@ -33,7 +33,7 @@ def test_bad_expr():
     Assert(
         kip_exec(f"1 + nope", stderr=True)
     ).equals(
-        b'Parsing Failed:\n  | 1 + nope\n  | ~~~~^ Expected an Integer.\n'
+        b'Parsing Failed:\n  | 1 + nope\n  | ~~~~^ Expeted a number or nested expression.\n'
     )
 
 @Test.should("correctly compute simple compound expressions").given(a = small_int, b = small_int, c = small_int).repeat(10)

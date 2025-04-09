@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "defs/AST.h"
 #include "defs/lexer.h"
 #include "defs/parser.h"
 
@@ -32,13 +33,23 @@ void printToken(Token *token) {
 	}
 }
 
-int make_number(Token *token) {
-	int n = 0, p = 1;
-	for (int i = token->len - 1; i >= 0; --i) {
-		n += p * (*(token->start + i) - '0');
-		p *= 10;
+int walkAST(AST *ast) {
+	switch (ast->type) {
+		case NodeConstant: {
+			return ast->is.constant.value;
+		}
+
+		case NodeBinary: {
+			switch (ast->is.binary.op) {
+				case OpAdd: return walkAST(ast->is.binary.left) + walkAST(ast->is.binary.right);
+				case OpSub: return walkAST(ast->is.binary.left) - walkAST(ast->is.binary.right);
+				case OpMul: return walkAST(ast->is.binary.left) * walkAST(ast->is.binary.right);
+				case OpDiv: return walkAST(ast->is.binary.left) / walkAST(ast->is.binary.right);
+			}
+		}
+
+		default: return 0;
 	}
-	return n;
 }
 
 int main(int argc, char *argv[]) {
@@ -52,7 +63,8 @@ int main(int argc, char *argv[]) {
 	Parser parser;
 	initParser(&parser, &lexer.tokens);
 
-	ParseResult pres = parse(&parser);
+	ParseResult pres = { .status = ParseOK };
+	AST *ast = parse(&parser, &pres);
 
 	if (pres.status != ParseOK) {
 		fprintf(stderr, "Parsing Failed:\n");
@@ -66,19 +78,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	int left = make_number(parser.ast->left);
-	int right = make_number(parser.ast->right);
-
-	int val;
-	switch (parser.ast->op->type) {
-		case TokenPlus: val = left + right; break;
-		case TokenDash: val = left - right; break;
-		case TokenStar: val = left * right; break;
-		case TokenSlash: val = left / right; break;
-		default: break; // never happens
-	}
-
-	printf("%d\n", val);
+	printf("%d\n", walkAST(ast));
 
 	exit(EXIT_SUCCESS);
 }

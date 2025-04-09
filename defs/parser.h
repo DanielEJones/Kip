@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include "lexer.h"
+#include "AST.h"
 
 
 // -------------------------------------------------------------------------
@@ -19,30 +20,15 @@ typedef struct {
 } ParseResult;
 
 // -------------------------------------------------------------------------
-// Types that the define the AST
-//
-
-typedef enum {
-	OpAdd, OpSub, OpMul,
-} OpType;
-
-typedef struct {
-	Token *left, *right;
-	Token *op;
-} AST;
-
-
-// -------------------------------------------------------------------------
 // Things that parse a program
 //
 
 typedef struct {
-	AST *ast;
 	TokenList *tokens;
 	size_t current;
 } Parser;
 
 void initParser(Parser *parser, TokenList *tokens);
-ParseResult parse(Parser *parser);
+AST *parse(Parser *parser, ParseResult *result);
 
 #endif /* PARSER_H */
