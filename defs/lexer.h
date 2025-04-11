@@ -12,6 +12,9 @@ typedef enum {
 	TokenInt,
 	TokenPlus, TokenDash, TokenStar, TokenSlash,
 	TokenLParen, TokenRParen,
+	TokenDoubleEqual, TokenBangEqual,
+	TokenLeftArrow, TokenRightArrow,
+	TokenLessEqual, TokenGreaterEqual,
 	TokenSpace, TokenNewline, TokenComment,
 	TokenEOF, TokenError,
 } TokenType;

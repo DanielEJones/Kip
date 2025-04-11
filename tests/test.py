@@ -44,6 +44,14 @@ def test_simple_compound_expressions(a, b, c):
 def test_harder_compound_expressions(a, b, c):
     Assert(kip_exec(f"{a} - {b} * {c}")).equals(f"{a - b * c}\n".encode())
 
+@Test.should("correctly test for equality").given(a = small_int).repeat(10)
+def test_simple_equality(a):
+    Assert(kip_exec(f"{a} == {a}")).equals(f"1\n".encode())
+
+@Test.should("correctly test for equality").given(a = small_int, b = small_int).repeat(10)
+def test_equality(a, b):
+    Assert(kip_exec(f"{a} == {b}")).equals(f"{1 if a == b else 0}\n".encode())
+
 
 if __name__ == "__main__":
     main()

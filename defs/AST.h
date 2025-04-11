@@ -7,11 +7,16 @@
 
 typedef enum {
 	OpAdd, OpSub, OpMul, OpDiv,
+	OpEqual, OpNotEqual,
 } OpType;
 
 typedef enum {
 	NodeConstant, NodeBinary
 } NodeType;
+
+typedef enum {
+	ValueInt, ValueBool,
+} ValueType;
 
 typedef struct ast_node {
 	NodeType type;
@@ -19,6 +24,7 @@ typedef struct ast_node {
 	union {
 
 		struct {
+			ValueType t;
 			int value;
 		} constant;
 

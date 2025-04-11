@@ -23,6 +23,8 @@ void printInner(AST *ast, int indentation) {
 				case OpSub: op = "-"; break;
 				case OpMul: op = "*"; break;
 				case OpDiv: op = "/"; break;
+				case OpEqual: op = "=="; break;
+				case OpNotEqual: op = "!="; break;
 			}
 			printf("Binary(%s) {\n", op);
 			printInner(ast->is.binary.left, indentation + 1);
@@ -45,6 +47,9 @@ int walkAST(AST *ast) {
 				case OpSub: return walkAST(ast->is.binary.left) - walkAST(ast->is.binary.right);
 				case OpMul: return walkAST(ast->is.binary.left) * walkAST(ast->is.binary.right);
 				case OpDiv: return walkAST(ast->is.binary.left) / walkAST(ast->is.binary.right);
+
+				case OpEqual: return walkAST(ast->is.binary.left) == walkAST(ast->is.binary.right);
+				case OpNotEqual: return walkAST(ast->is.binary.left) != walkAST(ast->is.binary.right);
 			}
 		}
 

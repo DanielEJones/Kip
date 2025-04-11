@@ -83,6 +83,13 @@ void lex(Lexer *lexer) {
 			case '/': t.type = TokenSlash; break;
 			case '(': t.type = TokenLParen; break;
 			case ')': t.type = TokenRParen; break;
+
+			case '=': t.type = (*(lexer->source + 1) == '=') ? TokenDoubleEqual : TokenError; lexer->source++; break;
+			case '<': t.type = (*(lexer->source + 1) == '=') ? TokenLessEqual : TokenLeftArrow; lexer->source++; break;
+			case '>': t.type = (*(lexer->source + 1) == '=') ? TokenGreaterEqual : TokenRightArrow; lexer->source++; break;
+
+			case '!': t.type = (*(lexer->source + 1) == '=') ? TokenBangEqual : TokenError; lexer->source++; break;
+
 			case '\n': t.type = TokenNewline; break;
 
 			case '\0': {

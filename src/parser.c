@@ -38,11 +38,37 @@ int make_number(Token *token) {
 }
 
 // -------------------------------------------------------------------------
+// AST utilities
+//
+
+AST *newNode(NodeType type) {
+	AST *node = malloc(sizeof(AST));
+	node->type = type;
+	return node;
+}
+
+AST *newConstant(ValueType type, int value) {
+	AST *node = newNode(NodeConstant);
+	node->is.constant.t = type;
+	node->is.constant.value = value;
+	return node;
+}
+
+AST *newBinary(OpType type, AST *left, AST *right) {
+	AST *node = newNode(NodeBinary);
+	node->is.binary.op = type;
+	node->is.binary.left = left;
+	node->is.binary.right = right;
+	return node;
+}
+
+// -------------------------------------------------------------------------
 // Parse Functions
 //
 
 /*
- * program = expr
+ * program = cmp
+ * cmp = expr [== expr]
  * expr = term [(+ | -) expr]
  * term = factor [(* | /) term]
  * factor = (expr) | num
@@ -52,11 +78,10 @@ AST *parseExpression(Parser *parser, ParseResult *result);
 
 AST *parseFactor(Parser *parser, ParseResult *result) {
 	if (expect(parser, TokenInt)) {
-		AST *node = malloc(sizeof(AST));
-		node->type = NodeConstant;
-		node->is.constant.value = make_number(current(parser));
-		advance(parser);
-		return node;
+		return newConstant(
+			ValueInt,
+			make_number(advance(parser))
+		);
 	} else if (expect(parser, TokenLParen)) {
 		advance(parser);
 		AST *node = parseExpression(parser, result);
@@ -65,23 +90,16 @@ AST *parseFactor(Parser *parser, ParseResult *result) {
 	} else {
 		result->status = ParseErr;
 		result->message = "Expeted a number or nested expression.";
-		AST *node = malloc(sizeof(AST));
-		node->type = NodeConstant;
-		node->is.constant.value = 99;
-		return node;
+		return newConstant(ValueInt, 99);
 	}
 }
 
 AST *parseTerm(Parser *parser, ParseResult *result) {
 	AST *node = parseFactor(parser, result);
 	while (expect(parser, TokenStar) || expect(parser, TokenSlash)) {
-		AST *new = malloc(sizeof(AST));
 		OpType op = (current(parser)->type == TokenStar) ? OpMul : OpDiv;
 		advance(parser);
-		new->type = NodeBinary;
-		new->is.binary.op = op;
-		new->is.binary.left = node;
-		new->is.binary.right = parseFactor(parser, result);
+		AST *new = newBinary(op, node, parseFactor(parser, result));
 		node = new;
 	}
 	return node;
@@ -90,20 +108,27 @@ AST *parseTerm(Parser *parser, ParseResult *result) {
 AST *parseExpression(Parser *parser, ParseResult *result) {
 	AST *node = parseTerm(parser, result);
 	while (expect(parser, TokenPlus) || expect(parser, TokenDash)) {
-		AST *new = malloc(sizeof(AST));
 		OpType op = (current(parser)->type == TokenPlus) ? OpAdd : OpSub;
 		advance(parser);
-		new->type = NodeBinary;
-		new->is.binary.op = op;
-		new->is.binary.left = node;
-		new->is.binary.right = parseTerm(parser, result);
+		AST *new = newBinary(op, node, parseTerm(parser, result));
+		node = new;
+	}
+	return node;
+}
+
+AST *parseComparison(Parser *parser, ParseResult *result) {
+	AST *node = parseExpression(parser, result);
+	while (expect(parser, TokenDoubleEqual) || expect(parser, TokenBangEqual)) {
+		OpType op = (current(parser)->type == TokenDoubleEqual ? OpEqual : OpNotEqual);
+		advance(parser);
+		AST *new = newBinary(op, node, parseExpression(parser, result));
 		node = new;
 	}
 	return node;
 }
 
 AST *parse(Parser *parser, ParseResult *result) {
-	return parseExpression(parser, result);
+	return parseComparison(parser, result);
 }
 
 void initParser(Parser *parser, TokenList *tokens) {
